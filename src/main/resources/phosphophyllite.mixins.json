@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "modernmods.phosphophylliterevived.mixin.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ChunkMapMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="${loader_version}"
+license="${license}"
+issueTrackerURL="https://github.com/BiggerSeries/Phosphophyllite/issues/"
+
+[[mods]]
+modId="${modid}"
+version="${mod_version}"
+displayName="${mod_named}"
+displayURL="https://biggerseries.net/"
+logoFile="logo.png"
+authors="${author}, gizmocodes"
+description='''
+${description}
+'''
+
+[[mixins]]
+config="phosphophyllite.mixins.json"
+
+[[dependencies.phosphophyllite]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neoversion},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.phosphophyllite]]
+    modId="minecraft"
+    type="required"
+    versionRange="[${mcversion}]"
+    ordering="NONE"
+    side="BOTH"

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "phosphophyllite:block/item_black_hole"
+  }
+}

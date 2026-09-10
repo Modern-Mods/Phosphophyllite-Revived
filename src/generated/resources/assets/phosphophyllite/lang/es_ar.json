@@ -1,0 +1,19 @@
+{
+  "block.phosphophyllite.fluid_black_hole": "Agujero Negro de Fluidos",
+  "block.phosphophyllite.fluid_white_hole": "Agujero Blanco de Fluidos",
+  "block.phosphophyllite.item_black_hole": "Agujero Negro de Ítems",
+  "block.phosphophyllite.item_white_hole": "Agujero Blanco de Ítems",
+  "block.phosphophyllite.phosphophyllite_ore": "Mena de Fosfofilita",
+  "block.phosphophyllite.power_black_hole": "Agujero Negro de Energía",
+  "block.phosphophyllite.power_white_hole": "Agujero Blanco de Energía",
+  "item.phosphophyllite.debug_tool": "Debeefer",
+  "item_group.phosphophyllite": "Phosphophyllite",
+  "multiblock.error.phosphophyllite.dimensions": "Dimensiones no permitidas \nActual: %d, %d, %d, \nMínimo permitido: %d, %d, %d, \nMáximo permitido: %d, %d, %d,",
+  "multiblock.error.phosphophyllite.invalid_block.corner": "Bloque inválido (%s) para una esquina en %s",
+  "multiblock.error.phosphophyllite.invalid_block.exterior": "Bloque inválido (%s) para el exterior en %s",
+  "multiblock.error.phosphophyllite.invalid_block.frame": "Bloque inválido (%s) para el marco en %s",
+  "multiblock.error.phosphophyllite.invalid_block.generic": "Bloque inválido (%s) en %s",
+  "multiblock.error.phosphophyllite.invalid_block.interior": "Bloque inválido (%s) para el interior en %s",
+  "multiblock.error.phosphophyllite.null_controller": "El sistema de multibloques tuvo un error interno desconocido, reportalo a Phosphophyllite",
+  "multiblock.error.phosphophyllite.unknown": "Ocurrió un error de multibloque desconocido, reportalo al autor del mod"
+}

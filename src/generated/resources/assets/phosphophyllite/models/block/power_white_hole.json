@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "phosphophyllite:block/power_white_hole"
+  }
+}
