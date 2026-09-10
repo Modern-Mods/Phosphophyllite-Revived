@@ -1,4 +1,4 @@
-// 1.21.1	2026-09-07T01:14:22.2842227	Block States: phosphophyllite
+// 26.1.2	2026-09-09T16:10:45.9049093	Model Definitions - phosphophyllite
 704d352827a7032d1cfda794c312ced177ab98fb assets/phosphophyllite/blockstates/fluid_black_hole.json
 10a868a3755480230abe149da3240a3ba2565788 assets/phosphophyllite/blockstates/fluid_white_hole.json
 279760a49cfac78739d12140cf97b27f26e51f91 assets/phosphophyllite/blockstates/item_black_hole.json
@@ -6,6 +6,14 @@
 cd67941ecd0c295df543569283bbe2285b71c551 assets/phosphophyllite/blockstates/phosphophyllite_ore.json
 9d578b98fee951e0c3b5f519985b5d105ae78b88 assets/phosphophyllite/blockstates/power_black_hole.json
 b0dca4878f2700f415977e08411e560323924026 assets/phosphophyllite/blockstates/power_white_hole.json
+6474d3498cab099e72355f9196d32f41a75d74da assets/phosphophyllite/items/debug_tool.json
+759bbae81fd29674d641c806c747ef17454df8d6 assets/phosphophyllite/items/fluid_black_hole.json
+7b6bc9463c23081815d8eacfa7b36a1c531e30ba assets/phosphophyllite/items/fluid_white_hole.json
+1f79157e7a4955d5fe549e5f4f0eb8b9f9dd1510 assets/phosphophyllite/items/item_black_hole.json
+be8c95ef9ceafd465c4456177f115de91442151f assets/phosphophyllite/items/item_white_hole.json
+e071d780b2bd96c0cd4a59a09f0f0e5f016861b6 assets/phosphophyllite/items/phosphophyllite_ore.json
+cc531827e623a990047789b257025959a778bf4d assets/phosphophyllite/items/power_black_hole.json
+87ad10c16960b08e0ec27f873d74d919504ba9d8 assets/phosphophyllite/items/power_white_hole.json
 1e32eb853013b2cff1adad56a3b396e44c231d8e assets/phosphophyllite/models/block/fluid_black_hole.json
 549cf0fa4d73984ce0d9204f5b1849655a315bbe assets/phosphophyllite/models/block/fluid_white_hole.json
 6755bc4b20691e67e8e1b9646e7318df4a402ab1 assets/phosphophyllite/models/block/item_black_hole.json
@@ -13,3 +21,4 @@ b4a66801ea6a904564b0caf73a87efbb0374c78b assets/phosphophyllite/models/block/ite
 b02d2ada9c99e3c7c9b24fc276fcd344ae10a394 assets/phosphophyllite/models/block/phosphophyllite_ore.json
 bc35b4198b0f980a15df48d6ea36811e1ef6f513 assets/phosphophyllite/models/block/power_black_hole.json
 62c7c4b3d95ca6f1de622bb62b8520ce69b9ae29 assets/phosphophyllite/models/block/power_white_hole.json
+1a15a14df4d661c155343725120b5b79195727f3 assets/phosphophyllite/models/item/debug_tool.json

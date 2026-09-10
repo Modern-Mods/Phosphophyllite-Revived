@@ -1,10 +1,9 @@
 package modernmods.phosphophylliterevived.blocks.whiteholes;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -12,6 +11,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import modernmods.phosphophylliterevived.transfer.TransferUtil;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.minecraft.core.registries.BuiltInRegistries;
 import modernmods.phosphophylliterevived.modular.tile.PhosphophylliteTile;
@@ -23,7 +24,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Objects;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class ItemWhiteHoleTile extends PhosphophylliteTile implements IItemHandler {
     
     @RegisterTile("item_white_hole")
@@ -36,9 +36,9 @@ public class ItemWhiteHoleTile extends PhosphophylliteTile implements IItemHandl
     @Nullable
     @Override
     public <T> T capability(BlockCapability<T, Direction> cap, final @Nullable Direction side) {
-        if (cap == Capabilities.ItemHandler.BLOCK) {
+        if (cap == Capabilities.Item.BLOCK) {
             //noinspection unchecked
-            return (T) this;
+            return (T) modernmods.phosphophylliterevived.transfer.ItemResourceHandler.of(this);
         }
         return super.capability(cap, side);
     }
@@ -63,7 +63,7 @@ public class ItemWhiteHoleTile extends PhosphophylliteTile implements IItemHandl
     public void readNBT(@Nonnull CompoundTag compound) {
         super.readNBT(compound);
         if (compound.contains("item")) {
-            item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(compound.getString("item")));
+            item = BuiltInRegistries.ITEM.getValue(Identifier.parse(compound.getStringOr("item", "")));
         }
     }
     
@@ -73,10 +73,11 @@ public class ItemWhiteHoleTile extends PhosphophylliteTile implements IItemHandl
             for (Direction direction : Direction.values()) {
                 BlockEntity te = level.getBlockEntity(worldPosition.relative(direction));
                 if (te != null) {
-                    final var handler = level.getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), direction.getOpposite());
+                    final var handler = level.getCapability(Capabilities.Item.BLOCK, te.getBlockPos(), direction.getOpposite());
                     if (handler != null) {
-                        for (int i = 0; i < handler.getSlots(); i++) {
-                            handler.insertItem(i, new ItemStack(item, item.getDefaultMaxStackSize()), false);
+                        try (final var transaction = TransferUtil.openTransaction()) {
+                            handler.insert(ItemResource.of(item), item.getDefaultMaxStackSize(), transaction);
+                            transaction.commit();
                         }
                     }
                 }

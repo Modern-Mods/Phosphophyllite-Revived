@@ -65,13 +65,13 @@ public interface IPersistentMultiblockTile<
             // backwards compat with opening older worlds
             // TODO: require this
             if (nbt.contains("last_assembly_state")) {
-                lastAssemblyState = IValidatedMultiblock.AssemblyState.valueOf(nbt.getString("last_assembly_state"));
+                lastAssemblyState = IValidatedMultiblock.AssemblyState.valueOf(nbt.getStringOr("last_assembly_state", "DISASSEMBLED"));
             }
             if (nbt.contains("expected_blocks")) {
-                expectedBlocks = nbt.getInt("expected_blocks");
+                expectedBlocks = nbt.getIntOr("expected_blocks", 0);
             }
             if (nbt.contains("controller_data")) {
-                this.controllerNBT = nbt.getCompound("controller_data");
+                this.controllerNBT = nbt.getCompoundOrEmpty("controller_data");
                 return;
             }
             this.controllerNBT = null;

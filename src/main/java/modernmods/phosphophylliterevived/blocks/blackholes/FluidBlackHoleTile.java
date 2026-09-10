@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.blocks.blackholes;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -17,7 +16,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class FluidBlackHoleTile extends PhosphophylliteTile implements IFluidHandler {
     
     @RegisterTile("fluid_black_hole")
@@ -30,9 +28,9 @@ public class FluidBlackHoleTile extends PhosphophylliteTile implements IFluidHan
     @Nullable
     @Override
     public <T> T capability(BlockCapability<T, Direction> cap, final @Nullable Direction side) {
-        if (cap == Capabilities.FluidHandler.BLOCK) {
+        if (cap == Capabilities.Fluid.BLOCK) {
             //noinspection unchecked
-            return (T) this;
+            return (T) modernmods.phosphophylliterevived.transfer.FluidResourceHandler.of(this);
         }
         return super.capability(cap, side);
     }

@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.blocks.blackholes;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
@@ -17,7 +16,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class ItemBlackHoleTile extends PhosphophylliteTile implements IItemHandler {
     
     @RegisterTile("item_black_hole")
@@ -30,9 +28,9 @@ public class ItemBlackHoleTile extends PhosphophylliteTile implements IItemHandl
     @Nullable
     @Override
     public <T> T capability(BlockCapability<T, Direction> cap, final @Nullable Direction side) {
-        if (cap == Capabilities.ItemHandler.BLOCK) {
+        if (cap == Capabilities.Item.BLOCK) {
             //noinspection unchecked
-            return (T) this;
+            return (T) modernmods.phosphophylliterevived.transfer.ItemResourceHandler.of(this);
         }
         return super.capability(cap, side);
     }

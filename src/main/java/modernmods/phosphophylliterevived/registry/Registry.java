@@ -7,7 +7,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
@@ -17,8 +18,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
@@ -52,7 +51,7 @@ import java.util.function.Supplier;
 
 public class Registry {
     
-    private static final boolean IS_DEV_ENVIRONMENT = !FMLEnvironment.production;
+    private static final boolean IS_DEV_ENVIRONMENT = !FMLEnvironment.isProduction();
     
     private final Logger LOGGER;
     
@@ -99,10 +98,10 @@ public class Registry {
 //        annotationMap.put(RegisterOre.class.getName(), this::registerWorldGenAnnotation);
     }
     
-    public Registry(@Nonnull String modNamespace, @Nonnull List<ResourceLocation> tabsBefore, @Nonnull List<ResourceLocation> tabsAfter) {
+    public Registry(@Nonnull String modNamespace, @Nonnull List<Identifier> tabsBefore, @Nonnull List<Identifier> tabsAfter) {
         String callerClass = new Exception().getStackTrace()[1].getClassName();
         String callerPackage = callerClass.substring(0, callerClass.lastIndexOf("."));
-        ModFileScanData modFileScanData = FMLLoader.getLoadingModList().getModFileById(modNamespace).getFile().getScanResult();
+        ModFileScanData modFileScanData = FMLLoader.getCurrent().getLoadingModList().getModFileById(modNamespace).getFile().getScanResult();
         
         LOGGER = LogManager.getLogger("Phosphophyllite/Registry/" + modNamespace);
         
@@ -133,7 +132,7 @@ public class Registry {
         
         final var ignoredTypes = new ObjectArrayList<String>();
         
-        if (!FMLEnvironment.dist.isClient()) {
+        if (!FMLEnvironment.getDist().isClient()) {
             final var clientOnlyAnnotationClassName = ClientOnly.class.getName();
             for (ModFileScanData.AnnotationData annotation : modFileScanData.getAnnotations()) {
                 // sided checks must be done before classload, as that itself may be problematic
@@ -167,10 +166,16 @@ public class Registry {
 //        NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, this::biomeLoadingEventHandler);
         ModBus.addListener(this::commonSetupEventHandler);
         
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             ModBus.addListener(this::clientSetupEventHandler);
+            ModBus.addListener(modernmods.phosphophylliterevived.client.FluidModelRegistrar::register);
         }
     }
+    
+    public record FluidClientInfo(Supplier<? extends Fluid> still, Supplier<? extends Fluid> flowing, Identifier stillTexture, Identifier flowingTexture, Identifier overlayTexture, int tintColor) {
+    }
+    
+    public static final List<FluidClientInfo> FLUID_TEXTURES = new ObjectArrayList<>();
     
     private void handleAnnotationTypes(ModFileScanData modFileScanData, String callerPackage, String modNamespace, Map<String, AnnotationHandler> annotations, boolean requiredCheck, ObjectArrayList<String> ignoredPackages, ObjectArrayList<String> ignoredTypes) {
         annotations:
@@ -327,8 +332,16 @@ public class Registry {
                     return;
                 }
                 field.setAccessible(true);
-                fieldObject = field.get(null);
                 annotation = field.getAnnotation(RegisterBlock.class);
+                {
+                    final var contextModid = annotation.modid().equals("") ? modNamespace : annotation.modid();
+                    RegistrationContext.push(Identifier.fromNamespaceAndPath(contextModid, annotation.name()));
+                }
+                try {
+                    fieldObject = field.get(null);
+                } finally {
+                    RegistrationContext.pop();
+                }
                 
                 if (!Modifier.isFinal(field.getModifiers())) {
                     LOGGER.warn("Non-final block instance variable " + memberName + " in " + declaringClass.getName());
@@ -367,7 +380,7 @@ public class Registry {
                 tileBlocks.computeIfAbsent(annotation.tileEntityClass(), k -> new LinkedList<>()).add(block);
             }
             
-            blockRegistryEvent.register(ResourceLocation.parse(registryName), block);
+            blockRegistryEvent.register(Identifier.parse(registryName), block);
             
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Block registered: " + registryName);
@@ -376,11 +389,11 @@ public class Registry {
             if (annotation.registerItem()) {
                 boolean creativeTabBlock = field.isAnnotationPresent(CreativeTabBlock.class);
                 itemRegistrationQueue.enqueue(() -> {
-                    var item = new BlockItem(block, new Item.Properties());
+                    var item = new BlockItem(block, new Item.Properties().useBlockDescriptionPrefix().setId(ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, Identifier.parse(registryName))));
                     if (annotation.creativeTab()) {
                         creativeTab.add(item);
                     }
-                    itemRegistryEvent.register(ResourceLocation.parse(registryName), item);
+                    itemRegistryEvent.register(Identifier.parse(registryName), item);
                     if (creativeTabBlock) {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Creative tab item set as " + registryName + " for mod " + modNamespace);
@@ -420,8 +433,16 @@ public class Registry {
                     }
                 }
                 field.setAccessible(true);
-                fieldObject = field.get(null);
                 annotation = field.getAnnotation(RegisterItem.class);
+                {
+                    final var contextModid = annotation.modid().equals("") ? modNamespace : annotation.modid();
+                    RegistrationContext.push(Identifier.fromNamespaceAndPath(contextModid, annotation.name()));
+                }
+                try {
+                    fieldObject = field.get(null);
+                } finally {
+                    RegistrationContext.pop();
+                }
                 
                 if (!Modifier.isFinal(field.getModifiers())) {
                     LOGGER.warn("Non-final item instance variable " + memberName + " in " + declaringClass.getName());
@@ -460,7 +481,7 @@ public class Registry {
                 creativeTab.add(item);
             }
             
-            itemRegistryEvent.register(ResourceLocation.parse(registryName), item);
+            itemRegistryEvent.register(Identifier.parse(registryName), item);
             
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Item registered: " + registryName);
@@ -497,7 +518,7 @@ public class Registry {
             }
             
             final String baseRegistryName = modid + ":" + name;
-            final var baseResourceLocation = ResourceLocation.parse(baseRegistryName);
+            final var baseResourceLocation = Identifier.parse(baseRegistryName);
             
             PhosphophylliteFluid[] fluids = new PhosphophylliteFluid[2];
             Item[] bucketArray = new Item[1];
@@ -513,36 +534,12 @@ public class Registry {
             
             Supplier<? extends PhosphophylliteFluid> stillSupplier = () -> fluids[0];
             Supplier<? extends PhosphophylliteFluid> flowingSupplier = () -> fluids[1];
-            final var fluidType = new FluidType(FluidType.Properties.create()) {
-                @Override
-                public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-                    consumer.accept(new IClientFluidTypeExtensions() {
-                        final ResourceLocation stillTexture = ResourceLocation.fromNamespaceAndPath(modid, "block/fluid/" + name + "_still");
-                        final ResourceLocation flowingTexture = ResourceLocation.fromNamespaceAndPath(modid, "block/fluid/" + name + "_flowing");
-                        final ResourceLocation overlayTexture = ResourceLocation.fromNamespaceAndPath(modid, "block/fluid/" + name + "_overlay");
-
-                        @Override
-                        public ResourceLocation getStillTexture() {
-                            return stillTexture;
-                        }
-
-                        @Override
-                        public ResourceLocation getFlowingTexture() {
-                            return flowingTexture;
-                        }
-
-                        @Override
-                        public ResourceLocation getOverlayTexture() {
-                            return overlayTexture;
-                        }
-
-                        @Override
-                        public int getTintColor() {
-                            return annotation.color();
-                        }
-                    });
-                }
-            };
+            final var fluidType = new FluidType(FluidType.Properties.create());
+            FLUID_TEXTURES.add(new FluidClientInfo(stillSupplier, flowingSupplier,
+                    Identifier.fromNamespaceAndPath(modid, "block/fluid/" + name + "_still"),
+                    Identifier.fromNamespaceAndPath(modid, "block/fluid/" + name + "_flowing"),
+                    Identifier.fromNamespaceAndPath(modid, "block/fluid/" + name + "_overlay"),
+                    annotation.color()));
             
             BaseFlowingFluid.Properties properties = new BaseFlowingFluid.Properties(() -> fluidType, stillSupplier, flowingSupplier);
             if (annotation.registerBucket()) {
@@ -566,7 +563,7 @@ public class Registry {
             
             fluids[0] = stillInstance;
             fluids[1] = flowingInstance;
-            blockArray[0] = new LiquidBlock(stillInstance, Block.Properties.of().noCollission().explosionResistance(100.0F).noLootTable());
+            blockArray[0] = new LiquidBlock(stillInstance, Block.Properties.of().setId(ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, baseResourceLocation)).noCollision().explosionResistance(100.0F).noLootTable());
             
             for (Field declaredField : fluidClazz.getDeclaredFields()) {
                 if (declaredField.isAnnotationPresent(RegisterFluid.Instance.class)) {
@@ -594,7 +591,7 @@ public class Registry {
             }
             
             fluidRegistryEvent.register(baseResourceLocation, still);
-            fluidRegistryEvent.register(ResourceLocation.parse(baseRegistryName + "_flowing"), flowing);
+            fluidRegistryEvent.register(Identifier.parse(baseRegistryName + "_flowing"), flowing);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Fluid registered: " + baseResourceLocation);
             }
@@ -608,10 +605,10 @@ public class Registry {
             
             if (annotation.registerBucket()) {
                 itemRegistrationQueue.enqueue(() -> {
-                    BucketItem bucket = new BucketItem(fluids[0], new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1));
+                    BucketItem bucket = new BucketItem(fluids[0], new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1).setId(ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, Identifier.parse(baseRegistryName + "_bucket"))));
                     creativeTab.add(bucket);
                     bucketArray[0] = bucket;
-                    itemRegistryEvent.register(ResourceLocation.parse(baseRegistryName + "_bucket"), bucket);
+                    itemRegistryEvent.register(Identifier.parse(baseRegistryName + "_bucket"), bucket);
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("Bucket registered: " + baseResourceLocation);
                     }
@@ -725,7 +722,7 @@ public class Registry {
             if (type == null) {
                 return;
             }
-            containerRegistryEvent.register(ResourceLocation.parse(registryName), type);
+            containerRegistryEvent.register(Identifier.parse(registryName), type);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Container registered: " + registryName);
             }
@@ -821,7 +818,7 @@ public class Registry {
             
             // fuck you java, its the correct size here
             @SuppressWarnings({"ConstantConditions", "ToArrayCallWithZeroLengthArrayArgument"})
-            BlockEntityType<?> type = BlockEntityType.Builder.of(producer, blocks.toArray(new Block[blocks.size()])).build(null);
+            BlockEntityType<?> type = new BlockEntityType<>(producer, blocks.toArray(new Block[blocks.size()]));
             
             try {
                 tileProducerTYPEField.set(producer, type);
@@ -830,7 +827,7 @@ public class Registry {
             }
             
             registeredTileTypes.add(type);
-            tileRegistryEvent.register(ResourceLocation.parse(registryName), type);
+            tileRegistryEvent.register(Identifier.parse(registryName), type);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("TileEntity registered: " + registryName);
             }
@@ -868,7 +865,7 @@ public class Registry {
 //                return;
 //            }
 //
-//            final ResourceLocation resourceLocation = ForgeRegistries.BLOCKS.getKey(oreInstance);
+//            final Identifier resourceLocation = ForgeRegistries.BLOCKS.getKey(oreInstance);
 //            assert resourceLocation != null;
 //
 //            if (!(oreInstance instanceof IPhosphophylliteOre oreInfo)) {

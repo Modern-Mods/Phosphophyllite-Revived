@@ -2,7 +2,6 @@ package modernmods.phosphophylliterevived.modular.block;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -27,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 @SuppressWarnings("unused")
 public class PhosphophylliteBlock extends Block implements IModularBlock {
     
@@ -94,7 +92,8 @@ public class PhosphophylliteBlock extends Block implements IModularBlock {
     }
     
     @Override
-    protected final void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
+    protected final void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, @Nullable net.minecraft.world.level.redstone.Orientation orientation, boolean isMoving) {
+        final BlockPos fromPos = orientation == null ? pos : pos.relative(orientation.getFront().getOpposite());
         onNeighborChange(state, worldIn, pos, blockIn, fromPos, isMoving);
         for (var module : moduleList) {
             module.onNeighborChange(state, worldIn, pos, blockIn, fromPos, isMoving);

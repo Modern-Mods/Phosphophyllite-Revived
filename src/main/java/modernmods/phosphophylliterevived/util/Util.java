@@ -17,12 +17,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -58,20 +59,20 @@ public class Util {
     private static final long[] lastChunkPos = new long[2];
     
     public static void setBlockState(Level level, BlockPos pos, BlockState state) {
-        var arrayIndex = level.isClientSide ? 1 : 0;
-        final var chunkPos = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+        var arrayIndex = level.isClientSide() ? 1 : 0;
+        final var chunkPos = ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4);
         if (lastLevel[arrayIndex] != level || chunkPos != lastChunkPos[arrayIndex]) {
             lastLevel[arrayIndex] = level;
             lastChunkPos[arrayIndex] = chunkPos;
             lastChunk[arrayIndex] = level.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
         }
-        lastChunk[arrayIndex].setBlockState(pos, state, false);
+        lastChunk[arrayIndex].setBlockState(pos, state, Block.UPDATE_ALL);
     }
     
     @Contract(pure = true)
     public static BlockEntity getTile(Level level, BlockPos pos) {
-        var arrayIndex = level.isClientSide ? 1 : 0;
-        final var chunkPos = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+        var arrayIndex = level.isClientSide() ? 1 : 0;
+        final var chunkPos = ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4);
         if (lastLevel[arrayIndex] != level || chunkPos != lastChunkPos[arrayIndex] || lastChunk[arrayIndex] == null) {
             lastLevel[arrayIndex] = level;
             lastChunkPos[arrayIndex] = chunkPos;
@@ -83,7 +84,7 @@ public class Util {
         return lastChunk[arrayIndex].getBlockEntity(pos);
     }
     
-    public static String readResourceLocation(ResourceLocation location) {
+    public static String readResourceLocation(Identifier location) {
         try (BufferedReader reader = Minecraft.getInstance().getResourceManager().getResource(location).orElseThrow().openAsReader()) {
             StringBuilder stringBuilder = new StringBuilder();
             String line;
@@ -97,9 +98,9 @@ public class Util {
         return null;
     }
     
-    public static JsonObject readJSONFile(ResourceLocation location) {
+    public static JsonObject readJSONFile(Identifier location) {
         if (location.getPath().lastIndexOf(".json") != location.getPath().length() - 5) {
-            location = ResourceLocation.fromNamespaceAndPath(location.getNamespace(), location.getPath() + ".json");
+            location = Identifier.fromNamespaceAndPath(location.getNamespace(), location.getPath() + ".json");
         }
         String jsonString = readResourceLocation(location);
         if (jsonString == null) {
@@ -149,7 +150,7 @@ public class Util {
                     continue;
                 }
                 LevelChunkSection[] chunkSections = chunk.getSections();
-                int chunkMinSection = chunk.getMinSection();
+                int chunkMinSection = chunk.getMinSectionY();
                 for (int Y = miny; Y < maxY; Y += 16) {
                     int sectionMinY = Math.max((Y) & 0xFFFFFFF0, miny);
                     int sectionMaxY = Math.min((Y + 16) & 0xFFFFFFF0, maxy + 1);
@@ -190,7 +191,7 @@ public class Util {
                 int chunkX = X >> 4;
                 int chunkZ = Z >> 4;
                 LevelChunk chunk = world.getChunk(chunkX, chunkZ);
-                chunk.setUnsaved(true);
+                chunk.markUnsaved();
             }
         }
     }
@@ -201,7 +202,7 @@ public class Util {
                 int chunkX = X >> 4;
                 int chunkZ = Z >> 4;
                 LevelChunk chunk = world.getChunk(chunkX, chunkZ);
-                chunk.setUnsaved(true);
+                chunk.markUnsaved();
             }
         }
     }
@@ -236,13 +237,13 @@ public class Util {
             LevelChunk chunk = world.getChunk(cPos.getX(), cPos.getZ());
             LevelChunkSection[] chunkSections = chunk.getSections();
             states.forEach((bPos, state) -> {
-                LevelChunkSection section = chunkSections[(bPos.getY() >> 4) - chunk.getMinSection()];
+                LevelChunkSection section = chunkSections[(bPos.getY() >> 4) - chunk.getMinSectionY()];
                 if (section != null) {
                     section.setBlockState(bPos.getX() & 15, bPos.getY() & 15, bPos.getZ() & 15, state);
                     markForUpdatePacket(bPos);
                 }
             });
-            chunk.setUnsaved(true);
+            chunk.markUnsaved();
         });
     }
     
@@ -276,7 +277,7 @@ public class Util {
             ((Long2ObjectMap.FastEntrySet<BlockState>) states.long2ObjectEntrySet()).fastIterator().forEachRemaining((entry1) -> {
                 final var bPosLong = entry1.getLongKey();
                 final var state = entry1.getValue();
-                final var sectionIndex = (BlockPos.getY(bPosLong) >> 4) - chunk.getMinSection();
+                final var sectionIndex = (BlockPos.getY(bPosLong) >> 4) - chunk.getMinSectionY();
                 LevelChunkSection section = chunkSections[sectionIndex];
                 if (section != null) {
                     section.getStates().set(BlockPos.getX(bPosLong) & 15, BlockPos.getY(bPosLong) & 15, BlockPos.getZ(bPosLong) & 15, state);
@@ -285,7 +286,7 @@ public class Util {
                 }
             });
             existingMaps.add(states);
-            chunk.setUnsaved(true);
+            chunk.markUnsaved();
         });
     }
     
@@ -318,7 +319,7 @@ public class Util {
             ((Long2ObjectMap.FastEntrySet<BlockState>) states.long2ObjectEntrySet()).fastIterator().forEachRemaining((entry1) -> {
                 final var bPosLong = entry1.getLongKey();
                 final var state = entry1.getValue();
-                LevelChunkSection section = chunkSections[(BlockPos.getY(bPosLong) >> 4) - chunk.getMinSection()];
+                LevelChunkSection section = chunkSections[(BlockPos.getY(bPosLong) >> 4) - chunk.getMinSectionY()];
                 if (section != null) {
                     final var oldState = section.getStates().getAndSet(BlockPos.getX(bPosLong) & 15, BlockPos.getY(bPosLong) & 15, BlockPos.getZ(bPosLong) & 15, state);
                     markForUpdatePacket(bPosLong);
@@ -334,7 +335,7 @@ public class Util {
                 }
             });
             existingMaps.add(states);
-            chunk.setUnsaved(true);
+            chunk.markUnsaved();
         });
     }
     
@@ -444,7 +445,7 @@ public class Util {
             long entryKey = entry.getLongKey();
             var entryArray = entry.getValue();
             var sectionPos = SectionPos.of(entryKey);
-            var levelSection = level.getChunk(sectionPos.x(), sectionPos.z()).getSections()[sectionPos.y() - level.getMinSection()];
+            var levelSection = level.getChunk(sectionPos.x(), sectionPos.z()).getSections()[sectionPos.y() - level.getMinSectionY()];
             if (levelSection != null) {
                 shortSet.clear();
                 for (int i = 0; i < 4096; i++) {
@@ -486,8 +487,8 @@ public class Util {
     }
     
     
-    private static final TagKey<Item> WRENCH_TAG_0 = TagKey.create(Registries.ITEM, ResourceLocation.parse("c:tools/wrench"));
-    private static final TagKey<Item> WRENCH_TAG_1 = TagKey.create(Registries.ITEM, ResourceLocation.parse("c:wrenches"));
+    private static final TagKey<Item> WRENCH_TAG_0 = TagKey.create(Registries.ITEM, Identifier.parse("c:tools/wrench"));
+    private static final TagKey<Item> WRENCH_TAG_1 = TagKey.create(Registries.ITEM, Identifier.parse("c:wrenches"));
     
     public static boolean isWrench(Item item) {
         return item.builtInRegistryHolder().is(WRENCH_TAG_0) || item.builtInRegistryHolder().is(WRENCH_TAG_1);

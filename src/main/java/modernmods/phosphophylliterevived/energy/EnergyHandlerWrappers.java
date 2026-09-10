@@ -11,7 +11,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+import modernmods.phosphophylliterevived.transfer.TransferUtil;
 import modernmods.phosphophylliterevived.capabilities.MekanismCapabilities;
 import modernmods.phosphophylliterevived.capabilities.PhosphophylliteCapabilities;
 import modernmods.phosphophylliterevived.registry.OnModLoad;
@@ -92,62 +95,93 @@ public class EnergyHandlerWrappers {
 
         @OnModLoad
         public static void onModLoad() {
-            registerWrapper(Capabilities.EnergyStorage.BLOCK, ToWrapper::new, FromWrapper::new, Integer.MIN_VALUE);
+            registerWrapper(Capabilities.Energy.BLOCK, ToWrapper::new, FromWrapper::new, Integer.MIN_VALUE);
         }
 
-        private record ToWrapper(IEnergyStorage neoStorage) implements IPhosphophylliteEnergyHandler {
+        private record ToWrapper(EnergyHandler neoStorage) implements IPhosphophylliteEnergyHandler {
 
             @Override
             public long insertEnergy(long maxInsert, boolean simulate) {
-                return neoStorage.receiveEnergy(Util.clampToInt(maxInsert), simulate);
+                try (final var transaction = TransferUtil.openTransaction()) {
+                    final int inserted = neoStorage.insert(Util.clampToInt(maxInsert), transaction);
+                    if (!simulate) {
+                        transaction.commit();
+                    }
+                    return inserted;
+                }
             }
 
             @Override
             public long extractEnergy(long maxExtract, boolean simulate) {
-                return neoStorage.extractEnergy(Util.clampToInt(maxExtract), simulate);
+                try (final var transaction = TransferUtil.openTransaction()) {
+                    final int extracted = neoStorage.extract(Util.clampToInt(maxExtract), transaction);
+                    if (!simulate) {
+                        transaction.commit();
+                    }
+                    return extracted;
+                }
             }
 
             @Override
             public long energyStored() {
-                return neoStorage.getEnergyStored();
+                return neoStorage.getAmountAsLong();
             }
 
             @Override
             public long maxEnergyStored() {
-                return neoStorage.getMaxEnergyStored();
+                return neoStorage.getCapacityAsLong();
             }
         }
 
-        private record FromWrapper(IPhosphophylliteEnergyHandler phosHandler) implements IEnergyStorage {
+        private static final class FromWrapper extends SnapshotJournal<Long> implements EnergyHandler {
 
-            @Override
-            public int receiveEnergy(int maxReceive, boolean simulate) {
-                return Util.clampToInt(phosHandler.insertEnergy(maxReceive, simulate));
+            private final IPhosphophylliteEnergyHandler phosHandler;
+            private long delta = 0;
+
+            private FromWrapper(IPhosphophylliteEnergyHandler phosHandler) {
+                this.phosHandler = phosHandler;
             }
 
             @Override
-            public int extractEnergy(int maxExtract, boolean simulate) {
-                return Util.clampToInt(phosHandler.extractEnergy(maxExtract, simulate));
+            protected Long createSnapshot() {
+                return delta;
             }
 
             @Override
-            public int getEnergyStored() {
-                return Util.clampToInt(phosHandler.energyStored());
+            protected void revertToSnapshot(Long snapshot) {
+                final long difference = delta - snapshot;
+                if (difference > 0) {
+                    phosHandler.extractEnergy(difference, false);
+                } else if (difference < 0) {
+                    phosHandler.insertEnergy(-difference, false);
+                }
+                delta = snapshot;
             }
 
             @Override
-            public int getMaxEnergyStored() {
-                return Util.clampToInt(phosHandler.maxEnergyStored());
+            public long getAmountAsLong() {
+                return phosHandler.energyStored();
             }
 
             @Override
-            public boolean canExtract() {
-                return true;
+            public long getCapacityAsLong() {
+                return phosHandler.maxEnergyStored();
             }
 
             @Override
-            public boolean canReceive() {
-                return true;
+            public int insert(int amount, TransactionContext transaction) {
+                updateSnapshots(transaction);
+                final long inserted = phosHandler.insertEnergy(amount, false);
+                delta += inserted;
+                return Util.clampToInt(inserted);
+            }
+
+            @Override
+            public int extract(int amount, TransactionContext transaction) {
+                updateSnapshots(transaction);
+                final long extracted = phosHandler.extractEnergy(amount, false);
+                delta -= extracted;
+                return Util.clampToInt(extracted);
             }
         }
     }

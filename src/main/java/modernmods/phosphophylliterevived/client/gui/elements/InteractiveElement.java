@@ -1,13 +1,10 @@
 package modernmods.phosphophylliterevived.client.gui.elements;
 
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import modernmods.phosphophylliterevived.client.gui.screens.PhosphophylliteScreen;
 import modernmods.phosphophylliterevived.client.gui.ScreenCallbacks;
 
@@ -20,8 +17,7 @@ import javax.annotation.Nullable;
  *
  * @param <T> Elements must be parented to a screen implementing {@link net.minecraft.world.inventory.AbstractContainerMenu AbstractContainerMenu}.
  */
-@OnlyIn(Dist.CLIENT)
-public class InteractiveElement<T extends AbstractContainerMenu> extends RenderedElement<T> implements GuiEventListener {
+public class InteractiveElement<T extends AbstractContainerMenu> extends RenderedElement<T> {
 
     /**
      * Used to enable or disable interactions.
@@ -137,7 +133,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param button The button clicked.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onMouseClicked != null) {
@@ -154,7 +149,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param button The button clicked.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onMouseReleased != null) {
@@ -173,7 +167,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param dragY  Drag y.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onMouseDragged != null) {
@@ -190,7 +183,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param delta  How far the mouse scrolled.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onMouseScrolled != null) {
@@ -207,7 +199,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param modifiers Any modifiers pressed.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onKeyPressed != null) {
@@ -224,7 +215,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param modifiers Any modifiers released.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onKeyReleased != null) {
@@ -240,7 +230,6 @@ public class InteractiveElement<T extends AbstractContainerMenu> extends Rendere
      * @param modifiers Any modifiers released.
      * @return Whether the event was consumed.
      */
-    @Override
     public boolean charTyped(char codePoint, int modifiers) {
         // Check conditions, and trigger.
         if (this.actionEnable && this.onCharTyped != null) {

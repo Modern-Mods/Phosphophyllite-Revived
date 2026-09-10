@@ -1,6 +1,6 @@
 package modernmods.phosphophylliterevived.networking;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import modernmods.phosphophylliterevived.serialization.PhosphophylliteCompound;
 import modernmods.phosphophylliterevived.util.NonnullDefault;
@@ -10,10 +10,10 @@ import java.util.function.Consumer;
 @NonnullDefault
 public class SimplePhosChannel {
 
-    private final ResourceLocation id;
+    private final Identifier id;
     private final Consumer<PhosphophylliteCompound> callbackFunction;
 
-    public SimplePhosChannel(ResourceLocation id, String version, Consumer<PhosphophylliteCompound> callbackFunction) {
+    public SimplePhosChannel(Identifier id, String version, Consumer<PhosphophylliteCompound> callbackFunction) {
         this.id = id;
         this.callbackFunction = callbackFunction;
         PhosNetwork.registerChannel(id, this::handler);

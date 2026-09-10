@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.blocks;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -13,7 +12,6 @@ import modernmods.phosphophylliterevived.registry.RegisterBlock;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class PhosphophylliteOre extends Block implements EntityBlock {
     

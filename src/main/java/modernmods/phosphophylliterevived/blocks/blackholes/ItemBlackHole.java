@@ -1,7 +1,6 @@
 package modernmods.phosphophylliterevived.blocks.blackholes;
 
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -16,7 +15,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 @SuppressWarnings("unused")
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class ItemBlackHole extends Block implements EntityBlock {
     
     @RegisterBlock(name = "item_black_hole", tileEntityClass = ItemBlackHoleTile.class)

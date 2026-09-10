@@ -28,8 +28,8 @@ public final class PhosphophylliteCapabilities {
     
     @OnModLoad
     private static void onModLoad() {
-        registerBlockCapability(Capabilities.ItemHandler.BLOCK);
-        registerBlockCapability(Capabilities.FluidHandler.BLOCK);
-        registerBlockCapability(Capabilities.EnergyStorage.BLOCK);
+        registerBlockCapability(Capabilities.Item.BLOCK);
+        registerBlockCapability(Capabilities.Fluid.BLOCK);
+        registerBlockCapability(Capabilities.Energy.BLOCK);
     }
 }

@@ -4,10 +4,11 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.Level;
@@ -155,17 +156,14 @@ public class PhosphophylliteTile extends BlockEntity implements IModularTile, ID
     }
     
     @Override
-    protected final void loadAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-        super.loadAdditional(compound, registries);
-        if (compound.contains("local")) {
-            CompoundTag local = compound.getCompound("local");
-            readNBT(local);
-        }
-        CompoundTag subNBTs = compound.getCompound("sub");
+    protected final void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        input.read("local", CompoundTag.CODEC).ifPresent(this::readNBT);
+        CompoundTag subNBTs = input.read("sub", CompoundTag.CODEC).orElseGet(CompoundTag::new);
         for (var module : moduleList) {
             String key = module.saveKey();
             if (key != null && subNBTs.contains(key)) {
-                CompoundTag nbt = subNBTs.getCompound(key);
+                CompoundTag nbt = subNBTs.getCompoundOrEmpty(key);
                 module.readNBT(nbt);
             }
         }
@@ -193,16 +191,16 @@ public class PhosphophylliteTile extends BlockEntity implements IModularTile, ID
     }
     
     @Override
-    protected final void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.saveAdditional(nbt, registries);
+    protected final void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
         CompoundTag subNBTs = subNBTs(TileModule::writeNBT);
         if (subNBTs != null) {
-            nbt.put("sub", subNBTs);
+            output.store("sub", CompoundTag.CODEC, subNBTs);
         }
         
         CompoundTag localNBT = writeNBT();
         if (!localNBT.isEmpty()) {
-            nbt.put("local", localNBT);
+            output.store("local", CompoundTag.CODEC, localNBT);
         }
     }
     
@@ -216,24 +214,31 @@ public class PhosphophylliteTile extends BlockEntity implements IModularTile, ID
     private static final CompoundTag EMPTY_TAG = new CompoundTag();
     
     @Override
-    public final void handleUpdateTag(CompoundTag compound, HolderLookup.Provider registries) {
-        super.handleUpdateTag(compound, registries);
-        if (compound.contains("local")) {
-            CompoundTag local = compound.getCompound("local");
-            handleDataNBT(local);
+    public final void handleUpdateTag(ValueInput input) {
+        super.handleUpdateTag(input);
+        input.read("local", CompoundTag.CODEC).ifPresent(this::handleDataNBT);
+        handleUpdateSubNBTs(input.read("sub", CompoundTag.CODEC).orElseGet(CompoundTag::new));
+    }
+
+    public final void handleUpdateTag(CompoundTag nbt) {
+        if (nbt.contains("local")) {
+            handleDataNBT(nbt.getCompoundOrEmpty("local"));
         }
-        CompoundTag subNBTs = compound.getCompound("sub");
+        handleUpdateSubNBTs(nbt.getCompoundOrEmpty("sub"));
+    }
+
+    private void handleUpdateSubNBTs(CompoundTag subNBTs) {
         for (var module : moduleList) {
             String key = module.saveKey();
             if (key != null) {
                 CompoundTag nbt = EMPTY_TAG;
                 if (subNBTs.contains(key)) {
-                    nbt = subNBTs.getCompound(key);
+                    nbt = subNBTs.getCompoundOrEmpty(key);
                 }
                 module.handleDataNBT(nbt);
                 if (nbt == EMPTY_TAG && !nbt.isEmpty()) {
                     MODULE_LOGGER.warn("Module " + key + " wrote to NBT in read!");
-                    for (var str : EMPTY_TAG.getAllKeys().toArray(new String[0])) {
+                    for (var str : EMPTY_TAG.keySet().toArray(new String[0])) {
                         EMPTY_TAG.remove(str);
                     }
                 }
@@ -265,25 +270,18 @@ public class PhosphophylliteTile extends BlockEntity implements IModularTile, ID
     }
     
     @Override
-    public final void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
+    public final void onDataPacket(Connection net, ValueInput input) {
         assert level != null;
         // getters are client only, so, cant grab it on the server even if i want to
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             return;
         }
-        CompoundTag compound = pkt.getTag();
-        if (compound == null) {
-            return;
-        }
-        if (compound.contains("local")) {
-            CompoundTag local = compound.getCompound("local");
-            handleUpdateNBT(local);
-        }
-        CompoundTag subNBTs = compound.getCompound("sub");
+        input.read("local", CompoundTag.CODEC).ifPresent(this::handleUpdateNBT);
+        CompoundTag subNBTs = input.read("sub", CompoundTag.CODEC).orElseGet(CompoundTag::new);
         for (var module : moduleList) {
             String key = module.saveKey();
             if (key != null && subNBTs.contains(key)) {
-                CompoundTag nbt = subNBTs.getCompound(key);
+                CompoundTag nbt = subNBTs.getCompoundOrEmpty(key);
                 module.handleUpdateNBT(nbt);
             }
         }

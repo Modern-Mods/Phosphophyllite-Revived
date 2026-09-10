@@ -3,7 +3,7 @@ package modernmods.phosphophylliterevived.registry;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -16,17 +16,17 @@ import java.util.List;
 
 public class CreativeTab {
 
-    private final ResourceLocation location;
+    private final Identifier location;
     private final Component title;
-    private final List<ResourceLocation> tabsBefore;
-    private final List<ResourceLocation> tabsAfter;
+    private final List<Identifier> tabsBefore;
+    private final List<Identifier> tabsAfter;
     private final ObjectArrayList<Item> items = new ObjectArrayList<>();
     private Item icon = Items.STONE;
 
-    public CreativeTab(@Nonnull String modNamespace, @Nonnull List<ResourceLocation> tabsBefore, @Nonnull List<ResourceLocation> tabsAfter) {
-        location = ResourceLocation.fromNamespaceAndPath(modNamespace, "creative_tab");
+    public CreativeTab(@Nonnull String modNamespace, @Nonnull List<Identifier> tabsBefore, @Nonnull List<Identifier> tabsAfter) {
+        location = Identifier.fromNamespaceAndPath(modNamespace, "creative_tab");
         title = Component.translatable("item_group." + modNamespace);
-        tabsBefore.add(CreativeModeTabs.SPAWN_EGGS.location());
+        tabsBefore.add(CreativeModeTabs.SPAWN_EGGS.identifier());
         this.tabsBefore = tabsBefore;
         this.tabsAfter = tabsAfter;
     }
@@ -39,7 +39,7 @@ public class CreativeTab {
         icon = item;
     }
 
-    public ResourceLocation location() {
+    public Identifier location() {
         return location;
     }
 

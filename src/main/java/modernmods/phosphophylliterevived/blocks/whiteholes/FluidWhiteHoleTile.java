@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.blocks.whiteholes;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -10,6 +9,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import modernmods.phosphophylliterevived.transfer.TransferUtil;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import modernmods.phosphophylliterevived.modular.tile.PhosphophylliteTile;
@@ -23,7 +24,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class FluidWhiteHoleTile extends PhosphophylliteTile implements IFluidHandler {
     
     @RegisterTile("fluid_white_hole")
@@ -36,9 +36,9 @@ public class FluidWhiteHoleTile extends PhosphophylliteTile implements IFluidHan
     @Nullable
     @Override
     public <T> T capability(BlockCapability<T, Direction> cap, final @Nullable Direction side) {
-        if (cap == Capabilities.FluidHandler.BLOCK) {
+        if (cap == Capabilities.Fluid.BLOCK) {
             //noinspection unchecked
-            return (T) this;
+            return (T) modernmods.phosphophylliterevived.transfer.FluidResourceHandler.of(this);
         }
         return super.capability(cap, side);
     }
@@ -93,13 +93,13 @@ public class FluidWhiteHoleTile extends PhosphophylliteTile implements IFluidHan
     @Override
     public CompoundTag writeNBT() {
         var compound = super.writeNBT();
-        compound.put("fluidstack", fluidStack.saveOptional(Objects.requireNonNull(level).registryAccess()));
+        compound.put("fluidstack", FluidStack.OPTIONAL_CODEC.encodeStart(Objects.requireNonNull(level).registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), fluidStack).getOrThrow());
         return compound;
     }
     
     @Override
     public void readNBT(CompoundTag compound) {
-        fluidStack = FluidStack.parseOptional(Objects.requireNonNull(level).registryAccess(), compound.getCompound("fluidstack"));
+        fluidStack = compound.getCompound("fluidstack").flatMap(tag -> FluidStack.OPTIONAL_CODEC.parse(Objects.requireNonNull(level).registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag).result()).orElse(FluidStack.EMPTY);
         super.readNBT(compound);
     }
     
@@ -108,9 +108,12 @@ public class FluidWhiteHoleTile extends PhosphophylliteTile implements IFluidHan
         for (Direction direction : Direction.values()) {
             BlockEntity te = level.getBlockEntity(worldPosition.relative(direction));
             if (te != null) {
-                final var handler = level.getCapability(Capabilities.FluidHandler.BLOCK, te.getBlockPos(), direction.getOpposite());
+                final var handler = level.getCapability(Capabilities.Fluid.BLOCK, te.getBlockPos(), direction.getOpposite());
                 if (handler != null) {
-                    handler.fill(fluidStack.copy(), FluidAction.EXECUTE);
+                    try (final var transaction = TransferUtil.openTransaction()) {
+                        handler.insert(FluidResource.of(fluidStack), Integer.MAX_VALUE, transaction);
+                        transaction.commit();
+                    }
                 }
             }
         }

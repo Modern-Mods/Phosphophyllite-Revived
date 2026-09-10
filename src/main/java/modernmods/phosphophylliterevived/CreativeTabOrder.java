@@ -1,17 +1,17 @@
 package modernmods.phosphophylliterevived;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public final class CreativeTabOrder {
 
-    public static List<ResourceLocation> before() {
+    public static List<Identifier> before() {
         return new ReferenceArrayList<>();
     }
 
-    public static List<ResourceLocation> after() {
+    public static List<Identifier> after() {
         return new ReferenceArrayList<>();
     }
 }

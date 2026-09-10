@@ -168,8 +168,8 @@ public class PowerBlackHoleTile extends PhosphophylliteTile implements IEnergyTi
 
     @Override
     protected void readNBT(CompoundTag compound) {
-        doPull = compound.getBoolean("doPull");
-        allowPush = compound.getBoolean("allowPush");
+        doPull = compound.getBooleanOr("doPull", false);
+        allowPush = compound.getBooleanOr("allowPush", false);
     }
 
     @Override

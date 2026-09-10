@@ -52,7 +52,7 @@ public interface IEnergyTile extends IModularTile {
             if (level == null) {
                 return null;
             }
-            final var tile = level.getBlockEntity(thisTile.getBlockPos().offset(direction.getNormal()));
+            final var tile = level.getBlockEntity(thisTile.getBlockPos().offset(direction.getUnitVec3i()));
             if (tile == null) {
                 return null;
             }

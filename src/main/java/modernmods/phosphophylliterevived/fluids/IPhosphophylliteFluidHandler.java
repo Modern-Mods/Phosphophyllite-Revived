@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.fluids;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;
@@ -12,7 +11,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public interface IPhosphophylliteFluidHandler extends IFluidHandler {
     
     @Override

@@ -1,7 +1,7 @@
 package modernmods.phosphophylliterevived.config.spec;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import modernmods.phosphophylliterevived.config.ConfigType;
 import modernmods.phosphophylliterevived.config.ConfigValue;
 import modernmods.phosphophylliterevived.parsers.Element;
@@ -162,7 +162,7 @@ public class SpecObjectNode extends SpecNode {
             
             if (fieldClazz == String.class) {
                 subNode = new SpecStringNode(this, objectField, defaults);
-            } else if (fieldClazz == ResourceLocation.class) {
+            } else if (fieldClazz == Identifier.class) {
                 subNode = new SpecResourceLocationNode(this, objectField, defaults);
             } else if (fieldClazz.isPrimitive() || Boolean.class.isAssignableFrom(fieldClazz) || Number.class.isAssignableFrom(fieldClazz)) {
                 if (fieldClazz == boolean.class || fieldClazz == Boolean.class) {

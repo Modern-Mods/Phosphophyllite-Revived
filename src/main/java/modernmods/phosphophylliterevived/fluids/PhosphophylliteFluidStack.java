@@ -159,8 +159,8 @@ public class PhosphophylliteFluidStack {
         if (nbt == null || !nbt.contains("FluidName")) {
             return new PhosphophylliteFluidStack();
         }
-        final var fluid = BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation.parse(nbt.getString("FluidName")));
-        long amount = nbt.contains("LongAmount") ? nbt.getLong("LongAmount") : nbt.getInt("Amount");
+        final var fluid = BuiltInRegistries.FLUID.getValue(net.minecraft.resources.Identifier.parse(nbt.getStringOr("FluidName", "")));
+        long amount = nbt.contains("LongAmount") ? nbt.getLongOr("LongAmount", 0L) : nbt.getIntOr("Amount", 0);
         return new PhosphophylliteFluidStack(fluid, amount);
     }
     

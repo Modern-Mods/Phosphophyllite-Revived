@@ -10,18 +10,8 @@ import java.util.function.BooleanSupplier;
 
 @Mixin(ChunkMap.class)
 public class ChunkMapMixin {
-    @Inject(
-            method = "processUnloads",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/level/ChunkMap;saveChunkIfNeeded(Lnet/minecraft/server/level/ChunkHolder;)Z",
-                    ordinal = 0
-            ),
-            cancellable = true
-    )
-    private void processUnloads(BooleanSupplier p_140354_, CallbackInfo ci) {
-        if (ci.isCancellable()) {
-            ci.cancel();
-        }
+    @Inject(method = "saveChunksEagerly", at = @At("HEAD"), cancellable = true)
+    private void saveChunksEagerly(BooleanSupplier haveTime, CallbackInfo ci) {
+        ci.cancel();
     }
 }

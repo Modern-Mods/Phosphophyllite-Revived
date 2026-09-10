@@ -3,16 +3,17 @@ package modernmods.phosphophylliterevived.client.gui.screens;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.client.renderer.texture.Tickable;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import modernmods.phosphophylliterevived.client.gui.RenderHelper;
 import modernmods.phosphophylliterevived.client.gui.api.IRender;
 import modernmods.phosphophylliterevived.client.gui.api.ITooltip;
@@ -28,7 +29,6 @@ import java.util.List;
  *
  * @param <T> Screens must have a screen container implementing {@link net.minecraft.world.inventory.AbstractContainerMenu AbstractContainerMenu}.
  */
-@OnlyIn(Dist.CLIENT)
 @SuppressWarnings("rawtypes")
 public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> implements MenuAccess<T> {
 
@@ -40,7 +40,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
     /**
      * The texture map this screen accesses.
      */
-    protected ResourceLocation textureAtlas;
+    protected Identifier textureAtlas;
 
     /**
      * Player inventory
@@ -50,12 +50,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
     /**
      * This constructor makes no assumptions.
      */
-    public PhosphophylliteScreen(T screenContainer, Inventory playerInventory, Component title, ResourceLocation textureAtlas, int width, int height) {
-        super(screenContainer, playerInventory, title);
+    public PhosphophylliteScreen(T screenContainer, Inventory playerInventory, Component title, Identifier textureAtlas, int width, int height) {
+        super(screenContainer, playerInventory, title, width, height);
         this.inventory = playerInventory;
         this.textureAtlas = textureAtlas;
-        this.imageWidth = width;
-        this.imageHeight = height;
         this.screenElements = Lists.newArrayList();
     }
 
@@ -103,7 +101,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      *
      * @param textureAtlas The atlas to switch to.
      */
-    public void setTextureAtlas(ResourceLocation textureAtlas) {
+    public void setTextureAtlas(Identifier textureAtlas) {
         this.textureAtlas = textureAtlas;
     }
 
@@ -116,12 +114,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @param partialTicks Partial ticks.
      */
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTicks);
 
         // Draw tooltips for all the elements that belong to this screen.
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
         for (AbstractElement element : this.screenElements) {
             // Check conditions, and render.
             if (element instanceof ITooltip) {
@@ -138,7 +134,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @param mouseY    The y position of the mouse.
      */
     @Override
-    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    protected void extractLabels(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         // Bind to the correct texture & reset render color.
         RenderHelper.bindTexture(this.textureAtlas);
         RenderHelper.setRenderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -152,7 +148,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
         }
 
         // Draw title.
-        guiGraphics.drawString(this.font, this.title.getString(), this.titleLabelX, this.titleLabelY, 4210752, false);
+        guiGraphics.text(this.font, this.title.getString(), this.titleLabelX, this.titleLabelY, 0xFF404040, false);
     }
 
     /**
@@ -164,13 +160,14 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @param mouseY       The y position of the mouse.
      */
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        super.extractBackground(guiGraphics, mouseX, mouseY, partialTicks);
         // Bind to the correct texture & reset render color.
         RenderHelper.bindTexture(this.textureAtlas);
         RenderHelper.setRenderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Draw background.
-        guiGraphics.blit(this.textureAtlas, this.getGuiLeft(), this.getGuiTop(), 0, 0, this.getXSize(), this.getYSize());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.textureAtlas, this.getGuiLeft(), this.getGuiTop(), 0, 0, this.getXSize(), this.getYSize(), 256, 256);
     }
 
     /**
@@ -201,7 +198,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
         // Iterate through this screen's elements.
         for (AbstractElement element : this.screenElements) {
             // Trigger.
-            ((Tickable) element).tick();
+            element.tick();
         }
     }
 
@@ -231,7 +228,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        final double mouseX = event.x();
+        final double mouseY = event.y();
+        final int button = event.buttonInfo().button();
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -240,7 +240,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
                 handled = (handled || element.mouseClicked(mouseX, mouseY, button));
             }
         }
-        return (handled || super.mouseClicked(mouseX, mouseY, button));
+        return (handled || super.mouseClicked(event, doubleClick));
     }
 
     /**
@@ -252,7 +252,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        final double mouseX = event.x();
+        final double mouseY = event.y();
+        final int button = event.buttonInfo().button();
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -261,7 +264,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
                 handled = (handled || element.mouseReleased(mouseX, mouseY, button));
             }
         }
-        return (handled || super.mouseReleased(mouseX, mouseY, button));
+        return (handled || super.mouseReleased(event));
     }
 
     /**
@@ -275,7 +278,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        final double mouseX = event.x();
+        final double mouseY = event.y();
+        final int button = event.buttonInfo().button();
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -284,7 +290,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
                 handled = (handled || element.mouseDragged(mouseX, mouseY, button, dragX, dragY));
             }
         }
-        return (handled || super.mouseDragged(mouseX, mouseY, button, dragX, dragY));
+        return (handled || super.mouseDragged(event, dragX, dragY));
     }
 
     /**
@@ -317,7 +323,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        final int keyCode = event.key();
+        final int scanCode = event.scancode();
+        final int modifiers = event.modifiers();
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -327,7 +336,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
             }
         }
         // Return either the handle status, or the parent's return.
-        return (handled || super.keyPressed(keyCode, scanCode, modifiers));
+        return (handled || super.keyPressed(event));
     }
 
     /**
@@ -339,7 +348,10 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(KeyEvent event) {
+        final int keyCode = event.key();
+        final int scanCode = event.scancode();
+        final int modifiers = event.modifiers();
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -348,7 +360,7 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
                 handled = (handled || element.keyReleased(keyCode, scanCode, modifiers));
             }
         }
-        return (handled || super.keyReleased(keyCode, scanCode, modifiers));
+        return (handled || super.keyReleased(event));
     }
 
     /**
@@ -359,7 +371,9 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
      * @return Whether the event was consumed.
      */
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
+    public boolean charTyped(CharacterEvent event) {
+        final char codePoint = (char) event.codepoint();
+        final int modifiers = 0;
         // Iterate through this screen's elements.
         boolean handled = false;
         for (AbstractElement element : this.screenElements) {
@@ -368,6 +382,6 @@ public class PhosphophylliteScreen<T extends AbstractContainerMenu> extends Abst
                 handled = (handled || element.charTyped(codePoint, modifiers));
             }
         }
-        return (handled || super.charTyped(codePoint, modifiers));
+        return (handled || super.charTyped(event));
     }
 }

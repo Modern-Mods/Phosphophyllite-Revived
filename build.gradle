@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.143'
+    id 'net.neoforged.moddev' version '2.0.146'
 }
 
 version = "${mcversion}-${mod_version}-${tag_lanzador}"
@@ -12,7 +12,7 @@ base {
     archivesName = "${mod_named}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     version = "${neoversion}"
@@ -31,15 +31,20 @@ neoForge {
             programArgument '--nogui'
         }
 
-        data {
-            data()
+        clientData {
+            clientData()
+            programArguments.addAll '--mod', "${modid}", '--all', '--output', file('src/generatedClient/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        serverData {
+            serverData()
             programArguments.addAll '--mod', "${modid}", '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
 
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
-            jvmArgument '-Xmx4G'
+            jvmArgument '-Xmx2G'
         }
     }
 
@@ -52,6 +57,7 @@ neoForge {
 
 sourceSets.main.resources {
     srcDir 'src/generated/resources'
+    srcDir 'src/generatedClient/resources'
 }
 
 repositories {
@@ -136,5 +142,5 @@ idea {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs << "-Xmaxerrs" << "2000"
-    options.getRelease().set(21)
+    options.getRelease().set(25)
 }

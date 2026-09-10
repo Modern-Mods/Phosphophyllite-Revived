@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
@@ -43,7 +43,7 @@ import static modernmods.phosphophylliterevived.Phosphophyllite.modid;
 @NonnullDefault
 public class ConfigManager {
     static final Logger LOGGER = LogManager.getLogger("Phosphophyllite/Config");
-    public static final ResourceLocation NETWORK_CHANNEL = ResourceLocation.fromNamespaceAndPath(modid, "phosphophyllite/configsync");
+    public static final Identifier NETWORK_CHANNEL = Identifier.fromNamespaceAndPath(modid, "phosphophyllite/configsync");
     
     private static final Object2ObjectOpenHashMap<String, ConfigRegistration> clientConfigs = new Object2ObjectOpenHashMap<>();
     private static final Object2ObjectOpenHashMap<String, ConfigRegistration> commonConfigs = new Object2ObjectOpenHashMap<>();
@@ -140,7 +140,7 @@ public class ConfigManager {
         for (final var value : clientConfigs.values()) {
             value.loadLocalConfigFile(true);
         }
-        if (FMLEnvironment.dist.isDedicatedServer() || server == null || !server.isDedicatedServer()) {
+        if (FMLEnvironment.getDist().isDedicatedServer() || server == null || !server.isDedicatedServer()) {
             // dedicated servers, disconnected clients, and integrated servers reload common and server configs too
             for (final var value : commonConfigs.values()) {
                 value.loadLocalConfigFile(true);
@@ -167,7 +167,7 @@ public class ConfigManager {
         NeoForge.EVENT_BUS.addListener(ConfigManager::onPlayerLogout);
         NeoForge.EVENT_BUS.addListener(ConfigManager::onServerAboutToStart);
         NeoForge.EVENT_BUS.addListener(ConfigManager::onServerStopped);
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             NeoForge.EVENT_BUS.addListener(ConfigManager::onLoggingIn);
             NeoForge.EVENT_BUS.addListener(ConfigManager::onLoggingOut);
         }
@@ -192,7 +192,7 @@ public class ConfigManager {
     }
     
     private static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent e) {
-        var server = e.getEntity().getServer();
+        var server = e.getEntity().level().getServer();
         assert server != null;
         if (!server.isDedicatedServer()) {
             var serverUUID = e.getEntity().getUUID();

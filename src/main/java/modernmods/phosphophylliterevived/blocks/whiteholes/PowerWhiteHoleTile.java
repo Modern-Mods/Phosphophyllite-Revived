@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.blocks.whiteholes;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,7 +21,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class PowerWhiteHoleTile extends PhosphophylliteTile implements IEnergyTile {
 
     @RegisterTile("power_white_hole")
@@ -170,8 +168,8 @@ public class PowerWhiteHoleTile extends PhosphophylliteTile implements IEnergyTi
 
     @Override
     protected void readNBT(CompoundTag compound) {
-        doPush = compound.getBoolean("doPush");
-        allowPull = compound.getBoolean("allowPull");
+        doPush = compound.getBooleanOr("doPush", false);
+        allowPull = compound.getBooleanOr("allowPull", false);
     }
 
     @Override

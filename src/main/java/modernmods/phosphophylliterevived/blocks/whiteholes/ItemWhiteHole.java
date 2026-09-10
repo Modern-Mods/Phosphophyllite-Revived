@@ -1,7 +1,6 @@
 package modernmods.phosphophylliterevived.blocks.whiteholes;
 
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -24,7 +23,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 @SuppressWarnings("unused")
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class ItemWhiteHole extends Block implements EntityBlock {
     
     @RegisterBlock(name = "item_white_hole", tileEntityClass = ItemWhiteHoleTile.class)

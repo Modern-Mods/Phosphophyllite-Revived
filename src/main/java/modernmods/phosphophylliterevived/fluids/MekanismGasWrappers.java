@@ -5,16 +5,15 @@ import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalHandler;
 import mekanism.api.recipes.RotaryRecipe;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class MekanismGasWrappers {
 
     public static IChemicalHandler wrap(IPhosphophylliteFluidHandler fluidHandler) {
@@ -103,7 +101,7 @@ public class MekanismGasWrappers {
         NeoForge.EVENT_BUS.addListener(MekanismGasWrappers::serverStopped);
     }
 
-    private static void addReloadEventListener(AddReloadListenerEvent event) {
+    private static void addReloadEventListener(AddServerReloadListenersEvent event) {
         reloadQueue.enqueue(MekanismGasWrappers::reloadMappings);
         if (server != null) {
             reloadQueue.runAll();
@@ -156,11 +154,11 @@ public class MekanismGasWrappers {
         fluidToGasMap.clear();
 
         @SuppressWarnings("unchecked")
-        RecipeType<RotaryRecipe> type = (RecipeType<RotaryRecipe>) BuiltInRegistries.RECIPE_TYPE.get(ResourceLocation.fromNamespaceAndPath("mekanism", "rotary"));
+        RecipeType<RotaryRecipe> type = (RecipeType<RotaryRecipe>) BuiltInRegistries.RECIPE_TYPE.getValue(Identifier.fromNamespaceAndPath("mekanism", "rotary"));
         if (type == null || server == null) {
             return;
         }
-        final var recipes = server.getRecipeManager().getAllRecipesFor(type);
+        final var recipes = server.getRecipeManager().recipeMap().byType(type);
 
         for (final var recipeHolder : recipes) {
             final var recipe = recipeHolder.value();
@@ -172,7 +170,7 @@ public class MekanismGasWrappers {
                     Chemical gas = input.getChemical();
                     long amount = input.getAmount();
                     if (mapping.gasToFluidGasUnits != -1 && mapping.gasToFluidGasUnits != amount) {
-                        LOGGER.warn("Input amount discrepancy in rotary recipe " + recipeHolder.id() + " with gas " + gas.getRegistryName() + " wanting " + amount + " input while a different gas wants " + mapping.gasToFluidGasUnits);
+                        LOGGER.warn("Input amount discrepancy in rotary recipe " + recipeHolder.id() + " with gas " + gas + " wanting " + amount + " input while a different gas wants " + mapping.gasToFluidGasUnits);
                         continue;
                     }
                     if (!mapping.gases.contains(gas)) {
@@ -231,7 +229,7 @@ public class MekanismGasWrappers {
             for (Chemical gas : mapping.gases) {
                 Mapping oldMapping = gasToFluidMap.put(gas, mapping);
                 if (oldMapping != null) {
-                    LOGGER.warn("Duplicate gas entry for gas " + gas.getRegistryName());
+                    LOGGER.warn("Duplicate gas entry for gas " + gas);
                 }
             }
             for (Fluid fluid : mapping.fluids) {
@@ -286,7 +284,7 @@ public class MekanismGasWrappers {
                 lastMapping = map;
             }
             if (lastMapping.fluids.isEmpty()) {
-                LOGGER.error("Gas mapping for " + gasStack.getChemical().getRegistryName() + " has zero fluid elements, removing");
+                LOGGER.error("Gas mapping for " + gasStack.getChemical() + " has zero fluid elements, removing");
                 removeMapping(lastMapping);
                 lastMapping = null;
                 return Fluids.EMPTY;
@@ -461,7 +459,7 @@ public class MekanismGasWrappers {
                 lastMapping = map;
             }
             if (lastMapping.fluids.isEmpty()) {
-                LOGGER.error("Gas mapping for " + stack.getChemical().getRegistryName() + " has zero fluid elements, removing");
+                LOGGER.error("Gas mapping for " + stack.getChemical() + " has zero fluid elements, removing");
                 removeMapping(lastMapping);
                 lastMapping = null;
                 return false;
@@ -480,7 +478,7 @@ public class MekanismGasWrappers {
                 lastMapping = map;
             }
             if (lastMapping.fluids.isEmpty()) {
-                LOGGER.error("Gas mapping for " + stack.getChemical().getRegistryName() + " has zero fluid elements, removing");
+                LOGGER.error("Gas mapping for " + stack.getChemical() + " has zero fluid elements, removing");
                 removeMapping(lastMapping);
                 lastMapping = null;
                 return stack;

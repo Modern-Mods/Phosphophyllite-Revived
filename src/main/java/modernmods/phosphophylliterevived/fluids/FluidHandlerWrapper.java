@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.fluids;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;
@@ -11,7 +10,6 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class FluidHandlerWrapper implements IPhosphophylliteFluidHandler {
     
     public static IPhosphophylliteFluidHandler wrap(IFluidHandler handler) {

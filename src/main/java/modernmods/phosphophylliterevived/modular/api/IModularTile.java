@@ -1,12 +1,10 @@
 package modernmods.phosphophylliterevived.modular.api;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public interface IModularTile {
     

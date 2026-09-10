@@ -1,7 +1,6 @@
 package modernmods.phosphophylliterevived.blocks.blackholes;
 
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -23,7 +22,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @SuppressWarnings("unused")
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class PowerBlackHole extends PhosphophylliteBlock implements EntityBlock {
     
     @RegisterBlock(name = "power_black_hole", tileEntityClass = PowerBlackHoleTile.class)

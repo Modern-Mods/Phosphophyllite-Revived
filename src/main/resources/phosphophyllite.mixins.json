@@ -4,6 +4,9 @@
   "package": "modernmods.phosphophylliterevived.mixin.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "BlockBehaviourMixin",
+    "ItemPropertiesMixin",
+    "BlockPropertiesMixin",
     "ChunkMapMixin"
   ],
   "injectors": {

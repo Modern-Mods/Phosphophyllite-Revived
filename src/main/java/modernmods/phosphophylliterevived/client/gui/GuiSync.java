@@ -3,12 +3,11 @@ package modernmods.phosphophylliterevived.client.gui;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
@@ -84,7 +83,6 @@ public class GuiSync {
     
     private static IGUIPacketProvider currentGUI;
     
-    @OnlyIn(Dist.CLIENT)
     public static synchronized void GuiOpenEvent(@Nonnull ScreenEvent.Opening e) {
         
         Screen gui = e.getScreen();
@@ -98,14 +96,14 @@ public class GuiSync {
         }
     }
     
-    public static final ResourceLocation CHANNEL = ResourceLocation.fromNamespaceAndPath(modid, "multiblock/guisync");
+    public static final Identifier CHANNEL = Identifier.fromNamespaceAndPath(modid, "multiblock/guisync");
     
     @OnModLoad
     public static void onModLoad() {
         PhosNetwork.registerChannel(CHANNEL, GuiSync::handler);
         NeoForge.EVENT_BUS.addListener(GuiSync::onContainerClose);
         NeoForge.EVENT_BUS.addListener(GuiSync::onContainerOpen);
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             NeoForge.EVENT_BUS.addListener(GuiSync::GuiOpenEvent);
         }
         Thread updateThread = new Thread(() -> {

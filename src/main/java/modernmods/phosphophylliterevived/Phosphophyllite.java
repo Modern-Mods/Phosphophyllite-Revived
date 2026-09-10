@@ -2,15 +2,13 @@ package modernmods.phosphophylliterevived;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -32,7 +30,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @SuppressWarnings("unused")
 @Mod(Phosphophyllite.modid)
@@ -51,15 +48,16 @@ public class Phosphophyllite {
         new Registry(modid, CreativeTabOrder.before(), CreativeTabOrder.after());
         modBus.addListener(PhosNetwork::register);
         NeoForge.EVENT_BUS.register(this);
-        if (FMLLoader.getDist().isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
+            modBus.addListener(modernmods.phosphophylliterevived.networking.PhosClientNetwork::register);
             NeoForge.EVENT_BUS.addListener(ClientTicker::advanceTick);
         }
 
         if (CONFIG.bypassPerformantCheck) {
             LOGGER.warn("Performant check bypassed");
-            LOGGER.warn("Performant " + (FMLLoader.getLoadingModList().getModFileById("performant") != null ? "is" : "is not") + " present");
+            LOGGER.warn("Performant " + (FMLLoader.getCurrent().getLoadingModList().getModFileById("performant") != null ? "is" : "is not") + " present");
         } else {
-            if (FMLLoader.getLoadingModList().getModFileById("performant") != null) {
+            if (FMLLoader.getCurrent().getLoadingModList().getModFileById("performant") != null) {
                 throw new IllegalStateException("""
                         Performant is incompatible with Phosphophyllite
                         This is a known issue with performant and it breaking other mods, the author does not care
@@ -96,7 +94,7 @@ public class Phosphophyllite {
         if (server == null) {
             return;
         }
-        if (FMLLoader.getDist().isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             // ignore client thread
             // prevents double reloads, and reaching across sides
             if (RenderSystem.isOnRenderThread()) {
@@ -135,7 +133,6 @@ public class Phosphophyllite {
         Util.worldTickEndEvent(e.getLevel());
     }
 
-    @OnlyIn(Dist.CLIENT)
     private static class ClientTicker {
         private static void advanceTick(ClientTickEvent.Pre e) {
             // prevents deadlock

@@ -1,6 +1,5 @@
 package modernmods.phosphophylliterevived.modular.tile;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -17,7 +16,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import static modernmods.phosphophylliterevived.modular.tile.PhosphophylliteTile.MODULE_LOGGER;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public interface ISidedMultipart extends IModularTile {
     
@@ -95,12 +93,12 @@ public interface ISidedMultipart extends IModularTile {
         @Override
         public void readNBT(CompoundTag nbt) {
             if (nbt.contains("core")) {
-                CompoundTag subNBT = nbt.getCompound("core");
+                CompoundTag subNBT = nbt.getCompoundOrEmpty("core");
                 coreModule.readNBT(subNBT);
             }
             for (Direction value : Direction.values()) {
                 if (nbt.contains(value.toString())) {
-                    CompoundTag subNBT = nbt.getCompound(value.toString());
+                    CompoundTag subNBT = nbt.getCompoundOrEmpty(value.toString());
                     TileModule<?> module = sidedModules[value.get3DDataValue()];
                     if (module == null) {
                         MODULE_LOGGER.warn("Attempting to read NBT to side module that doesnt exist! " + iface + " : " + iface.as(BlockEntity.class).getBlockState());
@@ -138,12 +136,12 @@ public interface ISidedMultipart extends IModularTile {
         @Override
         public void handleDataNBT(CompoundTag nbt) {
             if (nbt.contains("core")) {
-                CompoundTag subNBT = nbt.getCompound("core");
+                CompoundTag subNBT = nbt.getCompoundOrEmpty("core");
                 coreModule.handleDataNBT(subNBT);
             }
             for (Direction value : Direction.values()) {
                 if (nbt.contains(value.toString())) {
-                    CompoundTag subNBT = nbt.getCompound(value.toString());
+                    CompoundTag subNBT = nbt.getCompoundOrEmpty(value.toString());
                     var module = sidedModules[value.get3DDataValue()];
                     if (module == null) {
                         MODULE_LOGGER.warn("Attempting to read NBT to side module that doesnt exist! " + iface + " : " + iface.as(BlockEntity.class).getBlockState());
@@ -181,12 +179,12 @@ public interface ISidedMultipart extends IModularTile {
         @Override
         public void handleUpdateNBT(CompoundTag nbt) {
             if (nbt.contains("core")) {
-                CompoundTag subNBT = nbt.getCompound("core");
+                CompoundTag subNBT = nbt.getCompoundOrEmpty("core");
                 coreModule.handleUpdateNBT(subNBT);
             }
             for (Direction value : Direction.values()) {
                 if (nbt.contains(value.toString())) {
-                    CompoundTag subNBT = nbt.getCompound(value.toString());
+                    CompoundTag subNBT = nbt.getCompoundOrEmpty(value.toString());
                     var module = sidedModules[value.get3DDataValue()];
                     if (module == null) {
                         MODULE_LOGGER.warn("Attempting to read NBT to side module that doesnt exist! " + iface + " : " + iface.as(BlockEntity.class).getBlockState());
